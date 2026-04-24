@@ -4,18 +4,14 @@
 %define mmn 20120211
 %define mmnisa %{mmn}%{__isa_name}%{__isa_bits}
 %define vstring %(source /etc/os-release; echo ${REDHAT_SUPPORT_PRODUCT})
-%if 0%{?fedora} > 26 || 0%{?rhel} > 7
 %global mpm event
-%else
-%global mpm prefork
-%endif
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.51
-Release: 2%{?dist}
+Version: 2.4.66
+Release: 1%{?dist}
 URL: https://httpd.apache.org/
-Source0: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2
+Source0: https://downloads.apache.org/httpd/%{name}-%{version}.tar.bz2
 Source1: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2.asc
 # gpg key file downloaded and verified by luhliarik
 # https://httpd.apache.org/dev/verification.html
@@ -61,6 +57,7 @@ Source45: config.layout
 Source46: apachectl.sh
 Source47: apachectl.xml
 Source48: apache-poweredby.png
+Source49: default-web-pages.tar.gz
 
 # build/scripts patches
 Patch2: httpd-2.4.43-apxs.patch
@@ -96,10 +93,17 @@ Patch65: httpd-2.4.51-r1894152.patch
 # Security fixes
 
 License: ASL 2.0
-BuildRequires: gcc, autoconf, pkgconfig, findutils, xmlto
+BuildRequires: gcc, autoconf, pkgconfig, findutils, xmlto, make
 BuildRequires: perl-interpreter, perl-generators, systemd-devel
 BuildRequires: zlib-devel, libselinux-devel, lua-devel, brotli-devel
-BuildRequires: apr-devel >= 1.5.0, apr-util-devel >= 1.5.0, pcre-devel >= 5.0
+BuildRequires: apr-devel >= 1.5.0, apr-util-devel >= 1.5.0
+%if 0%{?rhel} >= 8 || 0%{?fedora}
+BuildRequires: pcre2-devel
+%else
+BuildRequires: pcre-devel
+%endif
+BuildRequires: openssl-devel, libxml2-devel, openldap-devel
+BuildRequires: libnghttp2-devel, curl-devel, jansson-devel
 BuildRequires: gnupg2
 Requires: /etc/mime.types
 Provides: webserver
@@ -124,6 +128,7 @@ web server.
 Summary: Development interfaces for the Apache HTTP Server
 Requires: apr-devel, apr-util-devel, pkgconfig
 Requires: httpd = %{version}-%{release}
+Obsoletes: httpd-devel < %{version}-%{release}
 
 %description devel
 The httpd-devel package contains the APXS binary and other files
@@ -137,7 +142,7 @@ to install this package.
 %package manual
 Summary: Documentation for the Apache HTTP Server
 Requires: httpd = %{version}-%{release}
-BuildArch: noarch
+Obsoletes: httpd-manual < %{version}-%{release}
 
 %description manual
 The httpd-manual package contains the complete manual and
@@ -146,8 +151,8 @@ also be found at https://httpd.apache.org/docs/2.4/.
 
 %package filesystem
 Summary: The basic directory layout for the Apache HTTP Server
-BuildArch: noarch
 Requires(pre): /usr/sbin/useradd
+Obsoletes: httpd-filesystem < %{version}-%{release}
 
 %description filesystem
 The httpd-filesystem package contains the basic directory layout
@@ -156,6 +161,7 @@ for the directories.
 
 %package tools
 Summary: Tools for use with the Apache HTTP Server
+Obsoletes: httpd-tools < %{version}-%{release}
 
 %description tools
 The httpd-tools package contains tools which can be used with
@@ -172,6 +178,7 @@ Requires: sscg >= 2.2.0, /usr/bin/hostname
 Conflicts: openssl-libs < 1:1.0.1h-4
 # mod_ssl/mod_nss cannot both be loaded simultaneously
 Conflicts: mod_nss
+Obsoletes: mod_ssl < %{version}-%{release}
 
 %description -n mod_ssl
 The mod_ssl module provides strong cryptography for the Apache HTTP
@@ -194,6 +201,7 @@ transform and modify HTML and XML content.
 Summary: LDAP authentication modules for the Apache HTTP Server
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmnisa}
 Requires: apr-util-ldap
+Obsoletes: mod_ldap < %{version}-%{release}
 
 %description -n mod_ldap
 The mod_ldap and mod_authnz_ldap modules add support for LDAP
@@ -202,6 +210,7 @@ authentication to the Apache HTTP Server.
 %package -n mod_session
 Summary: Session interface for the Apache HTTP Server
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmnisa}
+Obsoletes: mod_session < %{version}-%{release}
 
 %description -n mod_session
 The mod_session module and associated backends provide an abstract
@@ -210,6 +219,7 @@ interface for storing and accessing per-user session data.
 %package -n mod_lua
 Summary: Lua scripting support for the Apache HTTP Server
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmnisa}
+Obsoletes: mod_lua < %{version}-%{release}
 
 %description -n mod_lua
 The mod_lua module allows the server to be extended with scripts
@@ -337,20 +347,34 @@ export LYNX_PATH=/usr/bin/links
         --with-suexec-uidmin=1000 --with-suexec-gidmin=1000 \
         --with-brotli \
         --enable-pie \
+%if 0%{?rhel} >= 8 || 0%{?fedora}
+        --with-pcre2 \
+%else
         --with-pcre \
+%endif
         --enable-mods-shared=all \
         --enable-ssl --with-ssl --disable-distcache \
         --enable-proxy --enable-proxy-fdpass \
-        --enable-cache \
-        --enable-disk-cache \
+        --enable-proxy-http --enable-proxy-ftp \
+        --enable-proxy-connect --enable-proxy-ajp \
+        --enable-proxy-balancer --enable-proxy-fcgi \
+        --enable-proxy-scgi --enable-proxy-uwsgi \
+        --enable-proxy-wstunnel --enable-proxy-http2 \
+        --enable-http2 \
+        --enable-cache --enable-cache-disk --enable-cache-socache \
+        --enable-socache-shmcb --enable-socache-dbm --enable-socache-memcache \
+        --enable-rewrite --enable-deflate --enable-expires --enable-headers \
+        --enable-auth-digest \
+        --enable-authn-anon --enable-authn-alias \
+        --enable-authn-dbd --enable-authn-dbm \
+        --enable-dav --enable-dav-fs --enable-dav-lock \
+        --enable-info --enable-status \
+        --enable-lua \
         --enable-ldap --enable-authnz-ldap \
         --enable-cgid --enable-cgi \
         --enable-cgid-fdpassing \
-        --enable-authn-anon --enable-authn-alias \
         --enable-systemd \
         --disable-imagemap --disable-file-cache \
-        --disable-http2 \
-        --disable-md \
         $*
 %make_build
 
@@ -484,6 +508,9 @@ set -x
 # Clean Document Root
 rm -v $RPM_BUILD_ROOT%{docroot}/html/*.html \
       $RPM_BUILD_ROOT%{docroot}/cgi-bin/*
+
+# Install default web pages
+tar xzf %{SOURCE49} -C $RPM_BUILD_ROOT%{docroot}/html/
 
 # Symlink for the powered-by-$DISTRO image:
 ln -s ../../pixmaps/poweredby.png \
@@ -710,6 +737,7 @@ exit $rv
 %{contentdir}/error/include/*.html
 %{contentdir}/noindex/index.html
 %{contentdir}/server-status/*
+%{docroot}/html/*.html
 
 %attr(0710,root,apache) %dir /run/httpd
 %attr(0700,apache,apache) %dir /run/httpd/htcacheclean
@@ -790,6 +818,10 @@ exit $rv
 %{_rpmconfigdir}/macros.d/macros.httpd
 
 %changelog
+* Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.66-1
+- Update to 2.4.66
+- Modernize spec for EL10
+
 * Tue Oct 12 2021 Joe Orton <jorton@redhat.com> - 2.4.51-2
 - mod_ssl: updated patch for OpenSSL 3.0 compatibility (#2007178)
 - mod_deflate/core: add two brigade handling correctness fixes
