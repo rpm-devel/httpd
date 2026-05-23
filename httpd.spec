@@ -1,9 +1,9 @@
-%define contentdir %{_datadir}/httpd
-%define docroot /var/www
-%define suexec_caller apache
-%define mmn 20120211
-%define mmnisa %{mmn}%{__isa_name}%{__isa_bits}
-%define vstring %(source /etc/os-release; echo ${REDHAT_SUPPORT_PRODUCT})
+%global contentdir %{_datadir}/httpd
+%global docroot /var/www
+%global suexec_caller apache
+%global mmn 20120211
+%global mmnisa %{mmn}%{__isa_name}%{__isa_bits}
+%global vstring %(source /etc/os-release; echo ${REDHAT_SUPPORT_PRODUCT})
 %global mpm event
 
 Summary: Apache HTTP Server
@@ -379,76 +379,76 @@ export LYNX_PATH=/usr/bin/links
 %make_build
 
 %install
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %make_install
 
 # Install systemd service files
-mkdir -p $RPM_BUILD_ROOT%{_unitdir}
+mkdir -p %{buildroot}%{_unitdir}
 for s in httpd.service htcacheclean.service httpd.socket \
          httpd@.service httpd-init.service; do
   install -p -m 644 $RPM_SOURCE_DIR/${s} \
-                    $RPM_BUILD_ROOT%{_unitdir}/${s}
+                    %{buildroot}%{_unitdir}/${s}
 done
 
 # install conf file/directory
-mkdir $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d \
-      $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d
+mkdir %{buildroot}%{_sysconfdir}/httpd/conf.d \
+      %{buildroot}%{_sysconfdir}/httpd/conf.modules.d
 install -m 644 $RPM_SOURCE_DIR/README.confd \
-    $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/README
+    %{buildroot}%{_sysconfdir}/httpd/conf.d/README
 install -m 644 $RPM_SOURCE_DIR/README.confmod \
-    $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/README
+    %{buildroot}%{_sysconfdir}/httpd/conf.modules.d/README
 for f in 00-base.conf 00-mpm.conf 00-lua.conf 01-cgi.conf 00-dav.conf \
          00-proxy.conf 00-ssl.conf 01-ldap.conf 00-proxyhtml.conf \
          01-ldap.conf 00-systemd.conf 01-session.conf 00-optional.conf; do
   install -m 644 -p $RPM_SOURCE_DIR/$f \
-        $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/$f
+        %{buildroot}%{_sysconfdir}/httpd/conf.modules.d/$f
 done
 
 sed -i '/^#LoadModule mpm_%{mpm}_module /s/^#//' \
-     $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
+     %{buildroot}%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
 touch -r $RPM_SOURCE_DIR/00-mpm.conf \
-     $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
+     %{buildroot}%{_sysconfdir}/httpd/conf.modules.d/00-mpm.conf
 
 # install systemd override drop directory
 # Web application packages can drop snippets into this location if
 # they need ExecStart[pre|post].
-mkdir $RPM_BUILD_ROOT%{_unitdir}/httpd.service.d
-mkdir $RPM_BUILD_ROOT%{_unitdir}/httpd.socket.d
+mkdir %{buildroot}%{_unitdir}/httpd.service.d
+mkdir %{buildroot}%{_unitdir}/httpd.socket.d
 
 install -m 644 -p $RPM_SOURCE_DIR/10-listen443.conf \
-      $RPM_BUILD_ROOT%{_unitdir}/httpd.socket.d/10-listen443.conf
+      %{buildroot}%{_unitdir}/httpd.socket.d/10-listen443.conf
 
 for f in welcome.conf ssl.conf manual.conf userdir.conf; do
   install -m 644 -p $RPM_SOURCE_DIR/$f \
-        $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/$f
+        %{buildroot}%{_sysconfdir}/httpd/conf.d/$f
 done
 
 # Split-out extra config shipped as default in conf.d:
 for f in autoindex; do
   install -m 644 docs/conf/extra/httpd-${f}.conf \
-        $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/${f}.conf
+        %{buildroot}%{_sysconfdir}/httpd/conf.d/${f}.conf
 done
 
 # Extra config trimmed:
 rm -v docs/conf/extra/httpd-{ssl,userdir}.conf
 
-rm $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf/*.conf
+rm %{buildroot}%{_sysconfdir}/httpd/conf/*.conf
 install -m 644 -p $RPM_SOURCE_DIR/httpd.conf \
-   $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf/httpd.conf
+   %{buildroot}%{_sysconfdir}/httpd/conf/httpd.conf
 
-mkdir $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+mkdir %{buildroot}%{_sysconfdir}/sysconfig
 install -m 644 -p $RPM_SOURCE_DIR/htcacheclean.sysconf \
-   $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/htcacheclean
+   %{buildroot}%{_sysconfdir}/sysconfig/htcacheclean
 
 # tmpfiles.d configuration
-mkdir -p $RPM_BUILD_ROOT%{_prefix}/lib/tmpfiles.d
+mkdir -p %{buildroot}%{_prefix}/lib/tmpfiles.d
 install -m 644 -p $RPM_SOURCE_DIR/httpd.tmpfiles \
-   $RPM_BUILD_ROOT%{_prefix}/lib/tmpfiles.d/httpd.conf
+   %{buildroot}%{_prefix}/lib/tmpfiles.d/httpd.conf
 
 # Other directories
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/httpd \
-         $RPM_BUILD_ROOT/run/httpd/htcacheclean
+mkdir -p %{buildroot}%{_localstatedir}/lib/httpd \
+         %{buildroot}/run/httpd/htcacheclean
 
 # Substitute in defaults which are usually done (badly) by "make install"
 sed -i \
@@ -464,14 +464,14 @@ sed 's,@HTTPDBIN@,%{_sbindir}/httpd,g' $RPM_SOURCE_DIR/apachectl.sh \
     > apachectl.sh
 
 # Create cache directory
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/httpd \
-         $RPM_BUILD_ROOT%{_localstatedir}/cache/httpd/proxy \
-         $RPM_BUILD_ROOT%{_localstatedir}/cache/httpd/ssl
+mkdir -p %{buildroot}%{_localstatedir}/cache/httpd \
+         %{buildroot}%{_localstatedir}/cache/httpd/proxy \
+         %{buildroot}%{_localstatedir}/cache/httpd/ssl
 
 # Make the MMN accessible to module packages
-echo %{mmnisa} > $RPM_BUILD_ROOT%{_includedir}/httpd/.mmn
-mkdir -p $RPM_BUILD_ROOT%{_rpmconfigdir}/macros.d
-cat > $RPM_BUILD_ROOT%{_rpmconfigdir}/macros.d/macros.httpd <<EOF
+echo %{mmnisa} > %{buildroot}%{_includedir}/httpd/.mmn
+mkdir -p %{buildroot}%{_rpmconfigdir}/macros.d
+cat > %{buildroot}%{_rpmconfigdir}/macros.d/macros.httpd <<EOF
 %%_httpd_mmn %{mmnisa}
 %%_httpd_apxs %%{_libdir}/httpd/build/vendor-apxs
 %%_httpd_modconfdir %%{_sysconfdir}/httpd/conf.modules.d
@@ -482,22 +482,22 @@ cat > $RPM_BUILD_ROOT%{_rpmconfigdir}/macros.d/macros.httpd <<EOF
 EOF
 
 # Handle contentdir
-mkdir $RPM_BUILD_ROOT%{contentdir}/noindex \
-      $RPM_BUILD_ROOT%{contentdir}/server-status
+mkdir %{buildroot}%{contentdir}/noindex \
+      %{buildroot}%{contentdir}/server-status
 ln -s ../../testpage/index.html \
-      $RPM_BUILD_ROOT%{contentdir}/noindex/index.html
+      %{buildroot}%{contentdir}/noindex/index.html
 install -m 644 -p docs/server-status/* \
-        $RPM_BUILD_ROOT%{contentdir}/server-status
+        %{buildroot}%{contentdir}/server-status
 rm -rf %{contentdir}/htdocs
 
 # remove manual sources
-find $RPM_BUILD_ROOT%{contentdir}/manual \( \
+find %{buildroot}%{contentdir}/manual \( \
     -name \*.xml -o -name \*.xml.* -o -name \*.ent -o -name \*.xsl -o -name \*.dtd \
     \) -print0 | xargs -0 rm -f
 
 # Strip the manual down just to English and replace the typemaps with flat files:
 set +x
-for f in `find $RPM_BUILD_ROOT%{contentdir}/manual -name \*.html -type f`; do
+for f in `find %{buildroot}%{contentdir}/manual -name \*.html -type f`; do
    if test -f ${f}.en; then
       cp ${f}.en ${f}
       rm ${f}.*
@@ -506,58 +506,58 @@ done
 set -x
 
 # Clean Document Root
-rm -v $RPM_BUILD_ROOT%{docroot}/html/*.html \
-      $RPM_BUILD_ROOT%{docroot}/cgi-bin/*
+rm -v %{buildroot}%{docroot}/html/*.html \
+      %{buildroot}%{docroot}/cgi-bin/*
 
 # Install default web pages
-tar xzf %{SOURCE49} -C $RPM_BUILD_ROOT%{docroot}/html/
+tar xzf %{SOURCE49} -C %{buildroot}%{docroot}/html/
 
 # Symlink for the powered-by-$DISTRO image:
 ln -s ../../pixmaps/poweredby.png \
-        $RPM_BUILD_ROOT%{contentdir}/icons/poweredby.png
+        %{buildroot}%{contentdir}/icons/poweredby.png
 
 # Symlink for the system logo
 %if 0%{?rhel} >= 9
 ln -s ../../pixmaps/system-noindex-logo.png \
-        $RPM_BUILD_ROOT%{contentdir}/icons/system_noindex_logo.png
+        %{buildroot}%{contentdir}/icons/system_noindex_logo.png
 %endif
 
 # symlinks for /etc/httpd
-rmdir $RPM_BUILD_ROOT/etc/httpd/{state,run}
-ln -s ../..%{_localstatedir}/log/httpd $RPM_BUILD_ROOT/etc/httpd/logs
-ln -s ../..%{_localstatedir}/lib/httpd $RPM_BUILD_ROOT/etc/httpd/state
-ln -s /run/httpd $RPM_BUILD_ROOT/etc/httpd/run
-ln -s ../..%{_libdir}/httpd/modules $RPM_BUILD_ROOT/etc/httpd/modules
+rmdir %{buildroot}/etc/httpd/{state,run}
+ln -s ../..%{_localstatedir}/log/httpd %{buildroot}/etc/httpd/logs
+ln -s ../..%{_localstatedir}/lib/httpd %{buildroot}/etc/httpd/state
+ln -s /run/httpd %{buildroot}/etc/httpd/run
+ln -s ../..%{_libdir}/httpd/modules %{buildroot}/etc/httpd/modules
 
 # install http-ssl-pass-dialog
-mkdir -p $RPM_BUILD_ROOT%{_libexecdir}
+mkdir -p %{buildroot}%{_libexecdir}
 install -m755 $RPM_SOURCE_DIR/httpd-ssl-pass-dialog \
-        $RPM_BUILD_ROOT%{_libexecdir}/httpd-ssl-pass-dialog
+        %{buildroot}%{_libexecdir}/httpd-ssl-pass-dialog
 
 # install http-ssl-gencerts
 install -m755 $RPM_SOURCE_DIR/httpd-ssl-gencerts \
-        $RPM_BUILD_ROOT%{_libexecdir}/httpd-ssl-gencerts
+        %{buildroot}%{_libexecdir}/httpd-ssl-gencerts
 
 # Install scripts
-install -m 755 apachectl.sh $RPM_BUILD_ROOT%{_sbindir}/apachectl
-touch -r $RPM_SOURCE_DIR/apachectl.sh $RPM_BUILD_ROOT%{_sbindir}/apachectl
-mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/initscripts/legacy-actions/httpd
+install -m 755 apachectl.sh %{buildroot}%{_sbindir}/apachectl
+touch -r $RPM_SOURCE_DIR/apachectl.sh %{buildroot}%{_sbindir}/apachectl
+mkdir -p %{buildroot}%{_libexecdir}/initscripts/legacy-actions/httpd
 for f in graceful configtest; do
     install -p -m 755 $RPM_SOURCE_DIR/action-${f}.sh \
-            $RPM_BUILD_ROOT%{_libexecdir}/initscripts/legacy-actions/httpd/${f}
+            %{buildroot}%{_libexecdir}/initscripts/legacy-actions/httpd/${f}
 done
 
 # Install logrotate config
-mkdir -p $RPM_BUILD_ROOT/etc/logrotate.d
+mkdir -p %{buildroot}/etc/logrotate.d
 install -m 644 -p $RPM_SOURCE_DIR/httpd.logrotate \
-        $RPM_BUILD_ROOT/etc/logrotate.d/httpd
+        %{buildroot}/etc/logrotate.d/httpd
 
 # Install man pages
-install -d $RPM_BUILD_ROOT%{_mandir}/man8 $RPM_BUILD_ROOT%{_mandir}/man5
+install -d %{buildroot}%{_mandir}/man8 %{buildroot}%{_mandir}/man5
 install -m 644 -p httpd.service.8 httpd-init.service.8 httpd.socket.8 htcacheclean.service.8 apachectl.8 \
-        $RPM_BUILD_ROOT%{_mandir}/man8
+        %{buildroot}%{_mandir}/man8
 install -m 644 -p httpd.conf.5 \
-        $RPM_BUILD_ROOT%{_mandir}/man5
+        %{buildroot}%{_mandir}/man5
 
 # fix man page paths
 sed -e "s|/usr/local/apache2/conf/httpd.conf|/etc/httpd/conf/httpd.conf|" \
@@ -567,46 +567,46 @@ sed -e "s|/usr/local/apache2/conf/httpd.conf|/etc/httpd/conf/httpd.conf|" \
     -e "s|/usr/local/apache2/logs/access_log|/var/log/httpd/access_log|" \
     -e "s|/usr/local/apache2/logs/httpd.pid|/run/httpd/httpd.pid|" \
     -e "s|/usr/local/apache2|/etc/httpd|" < docs/man/httpd.8 \
-  > $RPM_BUILD_ROOT%{_mandir}/man8/httpd.8
+  > %{buildroot}%{_mandir}/man8/httpd.8
 
 # Make ap_config_layout.h libdir-agnostic
 sed -i '/.*DEFAULT_..._LIBEXECDIR/d;/DEFAULT_..._INSTALLBUILDDIR/d' \
-    $RPM_BUILD_ROOT%{_includedir}/httpd/ap_config_layout.h
+    %{buildroot}%{_includedir}/httpd/ap_config_layout.h
 
 # Fix path to instdso in special.mk
 sed -i '/instdso/s,top_srcdir,top_builddir,' \
-    $RPM_BUILD_ROOT%{_libdir}/httpd/build/special.mk
+    %{buildroot}%{_libdir}/httpd/build/special.mk
 
 # vendor-apxs uses an unsanitized config_vars.mk which may
 # have dependencies on redhat-rpm-config.  apxs uses the
 # config_vars.mk with a sanitized config_vars.mk
-cp -p $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk \
-      $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor_config_vars.mk
+cp -p %{buildroot}%{_libdir}/httpd/build/config_vars.mk \
+      %{buildroot}%{_libdir}/httpd/build/vendor_config_vars.mk
 
 # Sanitize CFLAGS in standard config_vars.mk
 sed '/^CFLAGS/s,=.*$,= -O2 -g -Wall,' \
-    -i $RPM_BUILD_ROOT%{_libdir}/httpd/build/config_vars.mk
+    -i %{buildroot}%{_libdir}/httpd/build/config_vars.mk
 
 sed 's/config_vars.mk/vendor_config_vars.mk/' \
-    $RPM_BUILD_ROOT%{_bindir}/apxs \
-    > $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor-apxs
-touch -r $RPM_BUILD_ROOT%{_bindir}/apxs \
-      $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor-apxs
-chmod 755 $RPM_BUILD_ROOT%{_libdir}/httpd/build/vendor-apxs
+    %{buildroot}%{_bindir}/apxs \
+    > %{buildroot}%{_libdir}/httpd/build/vendor-apxs
+touch -r %{buildroot}%{_bindir}/apxs \
+      %{buildroot}%{_libdir}/httpd/build/vendor-apxs
+chmod 755 %{buildroot}%{_libdir}/httpd/build/vendor-apxs
 
 # Remove unpackaged files
 rm -vf \
-      $RPM_BUILD_ROOT%{_libdir}/*.exp \
-      $RPM_BUILD_ROOT/etc/httpd/conf/mime.types \
-      $RPM_BUILD_ROOT%{_libdir}/httpd/modules/*.exp \
-      $RPM_BUILD_ROOT%{_libdir}/httpd/build/config.nice \
-      $RPM_BUILD_ROOT%{_bindir}/{ap?-config,dbmmanage} \
-      $RPM_BUILD_ROOT%{_sbindir}/{checkgid,envvars*} \
-      $RPM_BUILD_ROOT%{contentdir}/htdocs/* \
-      $RPM_BUILD_ROOT%{_mandir}/man1/dbmmanage.* \
-      $RPM_BUILD_ROOT%{contentdir}/cgi-bin/*
+      %{buildroot}%{_libdir}/*.exp \
+      %{buildroot}/etc/httpd/conf/mime.types \
+      %{buildroot}%{_libdir}/httpd/modules/*.exp \
+      %{buildroot}%{_libdir}/httpd/build/config.nice \
+      %{buildroot}%{_bindir}/{ap?-config,dbmmanage} \
+      %{buildroot}%{_sbindir}/{checkgid,envvars*} \
+      %{buildroot}%{contentdir}/htdocs/* \
+      %{buildroot}%{_mandir}/man1/dbmmanage.* \
+      %{buildroot}%{contentdir}/cgi-bin/*
 
-rm -rf $RPM_BUILD_ROOT/etc/httpd/conf/{original,extra}
+rm -rf %{buildroot}/etc/httpd/conf/{original,extra}
 
 %pre filesystem
 getent group apache >/dev/null || groupadd -g 48 -r apache
@@ -645,16 +645,16 @@ if [ $rv -eq 0 ]; then
   echo PASS: Symbol export list verified.
 fi
 # Check the built modules are all PIC
-if readelf -d $RPM_BUILD_ROOT%{_libdir}/httpd/modules/*.so | grep TEXTREL; then
+if readelf -d %{buildroot}%{_libdir}/httpd/modules/*.so | grep TEXTREL; then
    echo FAIL: Modules contain non-relocatable code
    rv=1
 else
    echo PASS: No non-relocatable code in module builds
 fi
 # Ensure every mod_* that's built is loaded.
-for f in $RPM_BUILD_ROOT%{_libdir}/httpd/modules/*.so; do
+for f in %{buildroot}%{_libdir}/httpd/modules/*.so; do
   m=${f##*/}
-  if ! grep -q $m $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/*.conf; then
+  if ! grep -q $m %{buildroot}%{_sysconfdir}/httpd/conf.modules.d/*.conf; then
     echo FAIL: Module $m not configured.  Disable it, or load it.
     rv=1
    else
@@ -662,9 +662,9 @@ for f in $RPM_BUILD_ROOT%{_libdir}/httpd/modules/*.so; do
   fi
 done
 # Ensure every loaded mod_* is actually built
-mods=`grep -h ^LoadModule $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.modules.d/*.conf | sed 's,.*modules/,,'`
+mods=`grep -h ^LoadModule %{buildroot}%{_sysconfdir}/httpd/conf.modules.d/*.conf | sed 's,.*modules/,,'`
 for m in $mods; do
-  f=$RPM_BUILD_ROOT%{_libdir}/httpd/modules/${m}
+  f=%{buildroot}%{_libdir}/httpd/modules/${m}
   if ! test -x $f; then
     echo FAIL: Module $m is configured but not built.
     rv=1
@@ -818,6 +818,9 @@ exit $rv
 %{_rpmconfigdir}/macros.d/macros.httpd
 
 %changelog
+* Fri May 22 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.66-1
+- Fix spec violations: use %{buildroot}, %global for constants
+
 * Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.66-1
 - Update to 2.4.66
 - Modernize spec for EL10
