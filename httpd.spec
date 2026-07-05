@@ -8,9 +8,10 @@
 
 Summary: Apache HTTP Server
 Name: httpd
-Version: 2.4.66
+Version: 2.4.68
 Release: 1%{?dist}
 URL: https://httpd.apache.org/
+ExclusiveArch: x86_64 aarch64
 Source0: https://downloads.apache.org/httpd/%{name}-%{version}.tar.bz2
 Source1: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2.asc
 # gpg key file downloaded and verified by luhliarik
@@ -92,7 +93,7 @@ Patch65: httpd-2.4.51-r1894152.patch
 
 # Security fixes
 
-License: ASL 2.0
+License: Apache-2.0
 BuildRequires: gcc, autoconf, pkgconfig, findutils, xmlto, make
 BuildRequires: perl-interpreter, perl-generators, systemd-devel
 BuildRequires: zlib-devel, libselinux-devel, lua-devel, brotli-devel
@@ -379,8 +380,6 @@ export LYNX_PATH=/usr/bin/links
 %make_build
 
 %install
-rm -rf %{buildroot}
-
 %make_install
 
 # Install systemd service files
@@ -677,7 +676,8 @@ exit $rv
 
 %files
 
-%doc ABOUT_APACHE README CHANGES LICENSE VERSIONING NOTICE
+%license LICENSE
+%doc ABOUT_APACHE README CHANGES VERSIONING NOTICE
 %doc docs/conf/extra/*.conf
 %doc instance.conf server-status.conf
 
@@ -770,7 +770,8 @@ exit $rv
 %files tools
 %{_bindir}/*
 %{_mandir}/man1/*
-%doc LICENSE NOTICE
+%license LICENSE
+%doc NOTICE
 %exclude %{_bindir}/apxs
 %exclude %{_mandir}/man1/apxs.1*
 
@@ -818,6 +819,11 @@ exit $rv
 %{_rpmconfigdir}/macros.d/macros.httpd
 
 %changelog
+* Sat Jul 04 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.68-1
+- Version: 2.4.66 → 2.4.68 (latest; verified HTTP 200)
+- SPDX: ASL 2.0 → Apache-2.0; add ExclusiveArch: x86_64 aarch64
+- Remove rm -rf %%{buildroot} from %%install; %%license LICENSE
+
 * Fri May 22 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.66-1
 - Fix spec violations: use %{buildroot}, %global for constants
 
