@@ -94,18 +94,33 @@ Patch65: httpd-2.4.51-r1894152.patch
 # Security fixes
 
 License: Apache-2.0
+%if 0%{?suse_version}
+%global openssl_devel_pkg libopenssl-devel
+%global openldap_devel_pkg openldap2-devel
+%global curl_devel_pkg libcurl-devel
+%global lua_devel_pkg lua53-devel
+%global jansson_devel_pkg libjansson-devel
+%global gnupg_pkg gpg2
+%else
+%global openssl_devel_pkg openssl-devel
+%global openldap_devel_pkg openldap-devel
+%global curl_devel_pkg curl-devel
+%global lua_devel_pkg lua-devel
+%global jansson_devel_pkg jansson-devel
+%global gnupg_pkg gnupg2
+%endif
 BuildRequires: gcc, autoconf, pkgconfig, findutils, xmlto, make
 BuildRequires: perl-interpreter, perl-generators, systemd-devel
-BuildRequires: zlib-devel, libselinux-devel, lua-devel, brotli-devel
+BuildRequires: zlib-devel, libselinux-devel, %{lua_devel_pkg}, brotli-devel
 BuildRequires: apr-devel >= 1.5.0, apr-util-devel >= 1.5.0
 %if 0%{?rhel} >= 8 || 0%{?fedora}
 BuildRequires: pcre2-devel
 %else
 BuildRequires: pcre-devel
 %endif
-BuildRequires: openssl-devel, libxml2-devel, openldap-devel
-BuildRequires: libnghttp2-devel, curl-devel, jansson-devel
-BuildRequires: gnupg2
+BuildRequires: %{openssl_devel_pkg}, libxml2-devel, %{openldap_devel_pkg}
+BuildRequires: libnghttp2-devel, %{curl_devel_pkg}, %{jansson_devel_pkg}
+BuildRequires: %{gnupg_pkg}
 Requires: /etc/mime.types
 Provides: webserver
 Provides: mod_dav = %{version}-%{release}, httpd-suexec = %{version}-%{release}
@@ -171,9 +186,12 @@ the Apache HTTP Server.
 %package -n mod_ssl
 Summary: SSL/TLS module for the Apache HTTP Server
 Epoch: 1
-BuildRequires: openssl-devel
+BuildRequires: %{openssl_devel_pkg}
 Requires(pre): httpd-filesystem
 Requires: httpd = 0:%{version}-%{release}, httpd-mmn = %{mmnisa}
+# sscg is not reliably packaged on openSUSE/SLES repos (frequently pulled from
+# Fedora by users) - keep unguarded rather than guessing a substitute; SUSE
+# builds of this subpackage may need sscg installed from an external repo.
 Requires: sscg >= 2.2.0, /usr/bin/hostname
 # Require an OpenSSL which supports PROFILE=SYSTEM
 Conflicts: openssl-libs < 1:1.0.1h-4
@@ -819,6 +837,14 @@ exit $rv
 %{_rpmconfigdir}/macros.d/macros.httpd
 
 %changelog
+* Sat Jul 05 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.68-1
+- Multi-distro: guard openssl-devel/libopenssl-devel, openldap-devel/
+  openldap2-devel, curl-devel/libcurl-devel, lua-devel/lua53-devel,
+  jansson-devel/libjansson-devel, gnupg2/gpg2 via %%{?suse_version}
+- mod_ssl: use guarded openssl-devel name; document sscg not reliably
+  packaged on openSUSE/SLES (left unguarded, external repo required there)
+- ExclusiveArch already correct; no noarch issue found
+
 * Sat Jul 04 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 2.4.68-1
 - Version: 2.4.66 → 2.4.68 (latest; verified HTTP 200)
 - SPDX: ASL 2.0 → Apache-2.0; add ExclusiveArch: x86_64 aarch64
