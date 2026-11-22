@@ -12,8 +12,8 @@ Version: 2.4.68
 Release: 1%{?dist}
 URL: https://httpd.apache.org/
 ExclusiveArch: x86_64 aarch64
-Source0: https://downloads.apache.org/httpd/%{name}-%{version}.tar.bz2
-Source1: https://www.apache.org/dist/httpd/httpd-%{version}.tar.bz2.asc
+Source0: https://archive.apache.org/dist/httpd/%{name}-%{version}.tar.bz2
+Source1: https://archive.apache.org/dist/httpd/httpd-%{version}.tar.bz2.asc
 # gpg key file downloaded and verified by luhliarik
 # https://httpd.apache.org/dev/verification.html
 Source2: https://dist.apache.org/repos/dist/release/httpd/KEYS
